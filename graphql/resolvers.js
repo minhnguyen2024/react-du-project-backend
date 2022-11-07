@@ -108,5 +108,23 @@ module.exports = {
             ...createdCourse._doc,
             _id: createdPost._id.toString()
         }
+    },
+    courses: async function(req){
+        if(!req.isAuth){
+            const error = new Error('Not authenticated')
+            error.code = 401
+            throw error
+        }
+        const totalCourses = await Course.find().countDocuments()
+        const courses = await Course.find().populate('createdBy') //???
+        return {
+            courses: courses.map(course =>{
+                return {
+                    ...course._doc,
+                    _id: course._id.toString()
+                }
+            }),
+            totalCourses: totalCourses
+        }
     }
 }
