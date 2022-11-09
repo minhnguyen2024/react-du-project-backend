@@ -110,11 +110,11 @@ module.exports = {
         }
     },
     courses: async function(req){
-        if(!req.isAuth){
-            const error = new Error('Not authenticated')
-            error.code = 401
-            throw error
-        }
+        // if(!req.isAuth){
+        //     const error = new Error('Not authenticated!!!!')
+        //     error.code = 401
+        //     throw error
+        // }
         const totalCourses = await Course.find().countDocuments()
         const courses = await Course.find().populate('createdBy') //???
         return {
@@ -125,6 +125,24 @@ module.exports = {
                 }
             }),
             totalCourses: totalCourses
+        }
+    },
+    course: async function({ id }, req){
+        // if(!req.isAuth){
+        //     const error = new Error('Not authenticated')
+        //     error.code = 401
+        //     throw error
+        // }
+
+        const course = await Course.findById(id).populate('createdBy')
+        if(!course){
+            const error = new Error("Post not found")
+            error.code = 404
+            throw error
+        }
+        return {
+            ...course._doc,
+            _id: course._id.toString()
         }
     }
 }
