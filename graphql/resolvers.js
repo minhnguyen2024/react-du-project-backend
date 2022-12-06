@@ -29,7 +29,6 @@ module.exports = {
             const error = new Error("User already exists")
             throw error
         }
-
         const hashedPw = await bcrypt.hash(userInput.password, 12)
         const user = new User({
             email: userInput.email,
@@ -39,8 +38,11 @@ module.exports = {
         const createdUser = await user.save()
         return { ...createdUser._doc, _id: createdUser._id.toString()}
     },
-    login: async function({ email, password}){
-        const user = await Uset.findOne({ email: email})
+    login: async function({ email, password}, req){
+        console.log("Logging in1...")
+        console.log("req.isAuth login",req.isAuth)
+        console.log("userId login", req.userId)
+        const user = await User.findOne({ email: email})
         if(!user){
             const error = new Error('User not found')
             error.code = 401
@@ -52,7 +54,9 @@ module.exports = {
             error.code = 401
             throw error
         }
-         
+        console.log("Correct password")
+        
+        //return token along with user info
         const token = jwt.sign({
             userId: user._id.toString(),
             email: user.email
@@ -60,35 +64,41 @@ module.exports = {
             "secret",
             { expiresIn: "1h"}
         )
-        return { token: token, userId: user._id.toString() }
+        console.log("login resolver token", token)
+        return { 
+            token: token, 
+            userId: user._id.toString() 
+        }
     },
     createCourse: async function({ courseInput }, req){
-        if(!req.isAuth){
-            const error = new Error('Not authenticated')
-            error.code = 401
-            throw error
-        }
+        // if(!req.isAuth){
+        //     const error = new Error('Not authenticated')
+        //     error.code = 401
+        //     throw error
+        // }
         const errors = []
-        if (validator.isLength(courseInput.courseID, {max: 6})){
-            errors.push({ message: "Invalid course ID"})
-        }
+        // if (validator.isLength(courseInput.courseID, {max: 6})){
+        //     errors.push({ message: "Invalid course ID"})
+        // }
 
-        if(validator.isEmpty(courseInput.courseInstructor)){
-            errors.push({ message: "Please Add Instructor Name"})
-        }
+        // if(validator.isEmpty(courseInput.courseInstructor)){
+        //     errors.push({ message: "Please Add Instructor Name"})
+        // }
 
-        if(validator.isEmpty(courseInput.courseContent)){
-            errors.push({ message: "Please Add Course Content"})
-        }
+        // if(validator.isEmpty(courseInput.courseContent)){
+        //     errors.push({ message: "Please Add Course Content"})
+        // }
 
-        if (errors.length > 0) {
-            const error = new Error('Invalid input.');
-            error.data = errors;
-            error.code = 422;
-            throw error;
-        }
-
+        // if (errors.length > 0) {
+        //     const error = new Error('Invalid input.');
+        //     error.data = errors;
+        //     error.code = 422;
+        //     throw error;
+        // }
+        console.log("createdBy ",req.userId)
         const user = await User.findById(req.userId);
+        // const dummyUser = await User.findById('636a7a4f001931d3ce1f5b27');
+        // console.log(dummyUser)
         if (!user) {
             const error = new Error('Invalid user.');
             error.code = 401;
@@ -103,10 +113,11 @@ module.exports = {
             createdBy: user
         })
         const createdCourse = await course.save()
-        await user.courses.save()
+        user.courses.push(createdCourse)
+        await user.save()
         return {
             ...createdCourse._doc,
-            _id: createdPost._id.toString()
+            _id: createdCourse._id.toString()
         }
     },
     courses: async function(req){
@@ -116,7 +127,11 @@ module.exports = {
         //     throw error
         // }
         const totalCourses = await Course.find().countDocuments()
-        const courses = await Course.find().populate('createdBy') //???
+        const courses = await Course.find()
+        console.log('------------------')
+        console.log('courses')
+        console.log(courses)
+        console.log('------------------')
         return {
             courses: courses.map(course =>{
                 return {
@@ -136,7 +151,7 @@ module.exports = {
 
         const course = await Course.findById(id).populate('createdBy')
         if(!course){
-            const error = new Error("Post not found")
+            const error = new Error("Course not found")
             error.code = 404
             throw error
         }
@@ -144,5 +159,31 @@ module.exports = {
             ...course._doc,
             _id: course._id.toString()
         }
+    },
+    myCourses: async function({id}, req){
+        console.log({id})
+
+        const userId = "638ba4bab43be3f34a4d2d56"
+        const courses = await Course.find()
+        const myCourses = courses.filter(course => course.createdBy.toString() === id)
+    //    console.log(courses)
+    console.log('myCourses')
+       console.log(myCourses)
+       return{
+        courses: courses.map(course =>{
+            return {
+                ...course._doc,
+                _id: course._id.toString()
+            }
+        }),
+        totalCourses: 0
+       }
+
+    },
+    user: async function({id}, req){
+        console.log(id)
+        const user = await User.findById(id)
+        console.log(user)
+        return { ...user._doc, _id: user._id.toString() }
     }
 }

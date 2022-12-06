@@ -8,7 +8,6 @@ module.exports = buildSchema(`
         courseTitle: String!
         courseInstructor: String!
         courseContent: String!
-        createdBy: User!
     }
 
     type User {
@@ -38,15 +37,16 @@ module.exports = buildSchema(`
     input CourseInputData{
         courseID: String!
         courseTitle: String!
-        courseIntructor: String!
+        courseInstructor: String!
         courseContent: String!
-        
     }
 
     type RootQuery{
         login(email: String!, password: String!): AuthData!
         courses: CourseData!
         course(id: ID!): Course!
+        myCourses(id: ID!): CourseData!
+        user(id: ID!): User!
     }
 
     type RootMutation{

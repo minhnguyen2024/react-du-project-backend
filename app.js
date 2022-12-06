@@ -22,8 +22,8 @@ app.use((req, res, next) =>{
     next()
 })
 
-app.use(auth)
 app.use(bodyParser.json())
+app.use(auth)
 
 app.use('/graphql', graphqlHttp({
     schema: graphqlSchema,
