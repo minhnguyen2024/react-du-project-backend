@@ -162,15 +162,13 @@ module.exports = {
     },
     myCourses: async function({id}, req){
         console.log({id})
-
-        const userId = "638ba4bab43be3f34a4d2d56"
         const courses = await Course.find()
         const myCourses = courses.filter(course => course.createdBy.toString() === id)
     //    console.log(courses)
     console.log('myCourses')
        console.log(myCourses)
        return{
-        courses: courses.map(course =>{
+        courses: myCourses.map(course =>{
             return {
                 ...course._doc,
                 _id: course._id.toString()
